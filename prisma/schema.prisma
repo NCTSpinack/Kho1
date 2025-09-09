@@ -1,0 +1,299 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model kich_thuoc {
+  id            Int            @id @default(autoincrement())
+  ma_kich_thuoc String         @unique(map: "ma_kich_thuoc") @db.VarChar(50)
+  thong_so_lop  thong_so_lop[]
+}
+
+model loai_lop {
+  id           Int            @id @default(autoincrement())
+  ten_loai_lop String         @unique(map: "ten_loai_lop") @db.VarChar(100)
+  thong_so_lop thong_so_lop[]
+}
+
+model thong_so_lop {
+  id             Int          @id @default(autoincrement())
+  lop_id         Int
+  kich_thuoc_id  Int
+  thuong_hieu_id Int?
+  loai_lop_id    Int?
+  xuat_xu        String?      @db.VarChar(50)
+  nam_sx         String?      @db.VarChar(50)
+  hoa_lop        String?      @db.VarChar(50)
+  kich_thuoc     kich_thuoc   @relation(fields: [kich_thuoc_id], references: [id], onUpdate: Restrict, map: "kichthuoc_fk_thongso")
+  loai_lop       loai_lop?    @relation(fields: [loai_lop_id], references: [id], onDelete: Restrict, onUpdate: Restrict, map: "loailop_fk_thongso")
+  lop_oto        san_pham     @relation(fields: [lop_id], references: [id], onUpdate: Restrict, map: "thong_so_lop_ibfk_1")
+  thuong_hieu    thuong_hieu? @relation(fields: [thuong_hieu_id], references: [id], onDelete: Restrict, onUpdate: Restrict, map: "thuonghieu_fk_thongso")
+
+  @@index([lop_id], map: "lop_id")
+  @@index([kich_thuoc_id], map: "kichthuoc_fk_thongso")
+  @@index([loai_lop_id], map: "loailop_fk_thongso")
+  @@index([thuong_hieu_id], map: "thuonghieu_fk_thongso")
+}
+
+model thuong_hieu {
+  id              Int            @id @default(autoincrement())
+  ten_thuong_hieu String         @unique(map: "ten_thuong_hieu") @db.VarChar(100)
+  thong_so_lop    thong_so_lop[]
+}
+
+model tintuclopoto {
+  id            Int      @id @default(autoincrement())
+  tieu_de       String
+  slug          String   @unique(map: "TintucLopoto_slug_key")
+  tom_tat       String?
+  noi_dung      String?
+  hinh_anh      String?
+  tac_gia       String?
+  ngay_dang     DateTime @default(now())
+  trang_thai    Boolean  @default(true)
+  luot_xem      Int      @default(0)
+  tag           String?
+  loai_bai_viet String?
+  ngay_cap_nhat DateTime
+}
+
+model hinh_anh_san_pham {
+  id       Int       @id @default(autoincrement())
+  lop_id   Int?
+  url_anh  String?   @db.VarChar(255)
+  san_pham san_pham? @relation(fields: [lop_id], references: [id], onDelete: Restrict, onUpdate: Restrict, map: "hinh_anh_san_pham_ibfk_1")
+
+  @@index([lop_id], map: "lop_id")
+}
+
+model san_pham {
+  id                Int                 @id @default(autoincrement())
+  ten_san_pham      String              @db.VarChar(255)
+  ma_san_pham       String              @unique(map: "ma_san_pham") @db.VarChar(100)
+  slug              String              @unique(map: "slug") @db.VarChar(255)
+  so_luong          Int?                @default(0)
+  anh_dai_dien      String?             @db.VarChar(255)
+  mo_ta_chi_tiet    String?             @db.Text
+  rating            Float?              @default(0) @db.Float
+  luot_xem          Int?                @default(0)
+  trang_thai        Boolean?            @default(true)
+  ngay_tao          DateTime?           @default(now()) @db.DateTime(0)
+  ngay_cap_nhat     DateTime?           @default(now()) @db.DateTime(0)
+  chi_tiet_nhap     chi_tiet_nhap[]
+  chi_tiet_xuat     chi_tiet_xuat[]
+  gia_san_pham      gia_san_pham[]
+  hinh_anh_san_pham hinh_anh_san_pham[]
+  thong_so_ac_quy   thong_so_ac_quy[]
+  thong_so_dau      thong_so_dau[]
+  thong_so_lop      thong_so_lop[]
+}
+
+model chi_tiet_nhap {
+  id            Int        @id @default(autoincrement())
+  id_phieu_nhap Int
+  id_san_pham   Int
+  so_luong      Int
+  don_gia       Decimal    @db.Decimal(15, 2)
+  phieu_nhap    phieu_nhap @relation(fields: [id_phieu_nhap], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "chi_tiet_nhap_ibfk_1")
+  san_pham      san_pham   @relation(fields: [id_san_pham], references: [id], onUpdate: Restrict, map: "chi_tiet_nhap_ibfk_2")
+
+  @@index([id_phieu_nhap], map: "id_phieu_nhap")
+  @@index([id_san_pham], map: "id_san_pham")
+}
+
+model chi_tiet_xuat {
+  id            Int        @id @default(autoincrement())
+  id_phieu_xuat Int
+  id_san_pham   Int
+  so_luong      Int
+  don_gia       Decimal    @db.Decimal(15, 2)
+  phieu_xuat    phieu_xuat @relation(fields: [id_phieu_xuat], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "chi_tiet_xuat_ibfk_1")
+  san_pham      san_pham   @relation(fields: [id_san_pham], references: [id], onUpdate: Restrict, map: "chi_tiet_xuat_ibfk_2")
+
+  @@index([id_phieu_xuat], map: "id_phieu_xuat")
+  @@index([id_san_pham], map: "id_san_pham")
+}
+
+model gia_san_pham {
+  id           Int       @id @default(autoincrement())
+  lop_id       Int
+  gia_nhap     Decimal?  @db.Decimal(10, 2)
+  gia_cu       Decimal?  @db.Decimal(10, 2)
+  giam_gia     Decimal?  @db.Decimal(5, 2)
+  gia_ban      Decimal?  @db.Decimal(10, 2)
+  ngay_ap_dung DateTime? @default(now()) @db.DateTime(0)
+  san_pham     san_pham  @relation(fields: [lop_id], references: [id], onUpdate: Restrict, map: "gia_san_pham_ibfk_1")
+
+  @@index([lop_id], map: "lop_id")
+}
+
+model hoa_don {
+  id            Int                   @id @default(autoincrement())
+  so_hoa_don    String?               @unique(map: "so_hoa_don") @db.VarChar(50)
+  id_khach_hang Int
+  id_nguoi_dung Int
+  id_phieu_xuat Int?
+  ngay_lap      DateTime?             @default(now()) @db.DateTime(0)
+  tong_tien     Decimal?              @db.Decimal(15, 2)
+  giam_gia      Decimal?              @default(0.00) @db.Decimal(15, 2)
+  thanh_tien    Decimal?              @db.Decimal(15, 2)
+  hinh_thuc_tt  hoa_don_hinh_thuc_tt?
+  trang_thai    hoa_don_trang_thai?   @default(cho_thanh_toan)
+  khach_hang    khach_hang            @relation(fields: [id_khach_hang], references: [id], onUpdate: Restrict, map: "hoa_don_ibfk_1")
+  nguoi_dung    nguoi_dung            @relation(fields: [id_nguoi_dung], references: [id], onUpdate: Restrict, map: "hoa_don_ibfk_2")
+  phieu_xuat    phieu_xuat?           @relation(fields: [id_phieu_xuat], references: [id], onDelete: Restrict, onUpdate: Restrict, map: "hoa_don_ibfk_3")
+
+  @@index([id_khach_hang], map: "id_khach_hang")
+  @@index([id_nguoi_dung], map: "id_nguoi_dung")
+  @@index([id_phieu_xuat], map: "id_phieu_xuat")
+}
+
+model khach_hang {
+  id            Int       @id @default(autoincrement())
+  ho_ten        String    @db.VarChar(100)
+  so_dien_thoai String?   @db.VarChar(20)
+  email         String?   @db.VarChar(150)
+  dia_chi       String?   @db.Text
+  google_map    String?   @db.VarChar(255)
+  ghi_chu       String?   @db.Text
+  ngay_tao      DateTime? @default(now()) @db.DateTime(0)
+  hoa_don       hoa_don[]
+}
+
+model nguoi_dung {
+  id            Int                 @id @default(autoincrement())
+  ho_ten        String              @db.VarChar(100)
+  email         String?             @unique(map: "email") @db.VarChar(150)
+  so_dien_thoai String?             @db.VarChar(20)
+  ten_tai_khoan String?             @db.VarChar(255)
+  mat_khau      String?             @db.VarChar(255)
+  vai_tro       nguoi_dung_vai_tro? @default(nhan_vien)
+  trang_thai    Boolean?            @default(true)
+  ngay_tao      DateTime?           @default(now()) @db.DateTime(0)
+  hoa_don       hoa_don[]
+  phieu_nhap    phieu_nhap[]
+  phieu_xuat    phieu_xuat[]
+}
+
+model nha_cung_cap {
+  id_ncc        Int          @id @default(autoincrement())
+  ten_ncc       String       @db.VarChar(255)
+  dia_chi       String?      @db.VarChar(255)
+  so_dien_thoai String?      @db.VarChar(20)
+  email         String?      @db.VarChar(100)
+  ma_so_thue    String?      @db.VarChar(50)
+  ghi_chu       String?      @db.Text
+  ngay_tao      DateTime?    @default(now()) @db.DateTime(0)
+  ngay_cap_nhat DateTime?    @default(now()) @db.DateTime(0)
+  phieu_nhap    phieu_nhap[]
+}
+
+model nha_xe {
+  id            Int     @id @default(autoincrement())
+  chu_xe        String  @db.VarChar(100)
+  ten_nha_xe    String  @db.VarChar(100)
+  so_dien_thoai String? @db.VarChar(20)
+  chuyen_tuyen  String? @db.VarChar(150)
+  dia_chi       String? @db.VarChar(150)
+  mo_ta         String? @db.Text
+  google_map    String? @db.VarChar(255)
+  ghi_chu       String? @db.Text
+  hinh_anh      String? @db.Text
+}
+
+model phieu_nhap {
+  id              Int             @id @default(autoincrement())
+  so_phieu        String?         @unique(map: "so_phieu") @db.VarChar(50)
+  id_nguoi_dung   Int?
+  id_nha_cung_cap Int?
+  ngay_nhap       DateTime?       @default(now()) @db.DateTime(0)
+  tong_tien       Decimal?        @db.Decimal(15, 2)
+  ghi_chu         String?         @db.Text
+  chi_tiet_nhap   chi_tiet_nhap[]
+  nguoi_dung      nguoi_dung?     @relation(fields: [id_nguoi_dung], references: [id], onDelete: Restrict, onUpdate: Restrict, map: "phieu_nhap_ibfk_1")
+  nha_cung_cap    nha_cung_cap?   @relation(fields: [id_nha_cung_cap], references: [id_ncc], onDelete: Restrict, onUpdate: Restrict, map: "phieunhap_fk_ncc")
+
+  @@index([id_nguoi_dung], map: "id_nguoi_dung")
+  @@index([id_nha_cung_cap], map: "phieunhap_fk_ncc")
+}
+
+model phieu_xuat {
+  id            Int                   @id @default(autoincrement())
+  so_phieu      String?               @unique(map: "so_phieu") @db.VarChar(50)
+  id_nguoi_dung Int?
+  loai_xuat     phieu_xuat_loai_xuat? @default(ban_hang)
+  ngay_xuat     DateTime?             @default(now()) @db.DateTime(0)
+  tong_tien     Decimal?              @db.Decimal(15, 2)
+  ghi_chu       String?               @db.Text
+  chi_tiet_xuat chi_tiet_xuat[]
+  hoa_don       hoa_don[]
+  nguoi_dung    nguoi_dung?           @relation(fields: [id_nguoi_dung], references: [id], onDelete: Restrict, onUpdate: Restrict, map: "phieu_xuat_ibfk_1")
+
+  @@index([id_nguoi_dung], map: "id_nguoi_dung")
+}
+
+model thong_so_ac_quy {
+  id          Int      @id @default(autoincrement())
+  san_pham_id Int
+  thuong_hieu String?  @db.VarChar(100)
+  dung_luong  String?  @db.VarChar(50)
+  xuat_xu     String?  @db.VarChar(50)
+  dien_ap     String?  @default("\"12V\"") @db.VarChar(50)
+  loai_ac_quy String?  @default("\"Ắc quy khô\"") @db.VarChar(50)
+  san_pham    san_pham @relation(fields: [san_pham_id], references: [id], onUpdate: Restrict, map: "thongso_acquy_fk_sanpham")
+
+  @@index([san_pham_id], map: "thongso_acquy_fk_sanpham")
+}
+
+model thong_so_dau {
+  id          Int      @id @default(autoincrement())
+  san_pham_id Int
+  thuong_hieu String?  @db.VarChar(50)
+  xuat_xu     String?  @db.VarChar(50)
+  dung_tich   String?  @db.VarChar(50)
+  do_nhot     String?  @db.VarChar(50)
+  loai_dau    String?  @db.VarChar(50)
+  san_pham    san_pham @relation(fields: [san_pham_id], references: [id], onUpdate: Restrict, map: "thongsodau_fk_sanpham")
+
+  @@index([san_pham_id], map: "thongsodau_fk_sanpham")
+}
+
+model xe_oto {
+  id                Int     @id @default(autoincrement())
+  hang_xe           String? @db.VarChar(50)
+  ten_xe            String? @db.VarChar(50)
+  doi_xe            String? @db.VarChar(50)
+  dung_tich_xe      String? @db.VarChar(50)
+  kich_thuoc_lop    String? @db.VarChar(50)
+  loai_lop          String? @db.VarChar(50)
+  dung_luong_ac_quy String? @db.VarChar(50)
+  loai_coc_ac_quy   String? @db.VarChar(50)
+  so_lit_dau        String? @db.VarChar(50)
+}
+
+enum phieu_xuat_loai_xuat {
+  ban_hang
+  bao_hanh
+  chuyen_kho
+}
+
+enum nguoi_dung_vai_tro {
+  quan_tri
+  nhan_vien
+}
+
+enum hoa_don_hinh_thuc_tt {
+  tien_mat
+  chuyen_khoan
+  the
+}
+
+enum hoa_don_trang_thai {
+  cho_thanh_toan
+  da_thanh_toan
+  huy
+}
